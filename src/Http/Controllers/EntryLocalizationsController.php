@@ -118,6 +118,48 @@ class EntryLocalizationsController extends ApiController
         return app(EntryResource::class)::make(Facades\Entry::find($id));
     }
 
+    /**
+     * GET /collections/{collection}/entries/{entry}/localizations/{site}/values
+     *
+     * Returns the publish-form values for one localization in the RAW stored
+     * format (the same data the CP edit screen uses), so clients can
+     * round-trip structured fields like bard and replicator: read these
+     * values, change only the text nodes, and PATCH the result back.
+     *
+     * The regular show endpoint returns augmented values (e.g. bard as HTML),
+     * which cannot be written back through blueprint processing.
+     */
+    public function values(Request $request, $collection, $entry, $site)
+    {
+        $collection = $this->collectionFromHandle($collection);
+        $root = $this->rootEntry($entry, $collection);
+        $site = $this->siteFromHandle($site, $collection);
+
+        $localized = $root->in($site->handle());
+
+        abort_unless($localized, 404, 'No localization for that site.');
+
+        $this->authorize('view', $localized);
+
+        $request->headers->add(['accept' => 'application/json']);
+
+        $editData = (new CpController($request))->edit($request, $collection, $localized);
+
+        $payload = [
+            'site' => $site->handle(),
+            'values' => data_get($editData, 'values', []),
+            'localizedFields' => data_get($editData, 'localizedFields', []),
+            'hasOrigin' => data_get($editData, 'hasOrigin', false),
+            'originValues' => data_get($editData, 'originValues'),
+        ];
+
+        if ($request->boolean('with_blueprint')) {
+            $payload['blueprint'] = data_get($editData, 'blueprint');
+        }
+
+        return response()->json(['data' => $payload]);
+    }
+
     private function collectionFromHandle($collection)
     {
         $collection = is_string($collection) ? Facades\Collection::find($collection) : $collection;

@@ -116,6 +116,43 @@ class TermLocalizationsController extends ApiController
         }
     }
 
+    /**
+     * GET /taxonomies/{taxonomy}/terms/{slug}/localizations/{site}/values
+     *
+     * Returns the publish-form values for one localization in the RAW stored
+     * format (the same data the CP edit screen uses), so clients can
+     * round-trip structured fields like bard and replicator: read these
+     * values, change only the text nodes, and PATCH the result back.
+     *
+     * The regular show endpoint returns augmented values (e.g. bard as HTML),
+     * which cannot be written back through blueprint processing.
+     */
+    public function values(Request $request, $taxonomy, $slug, $site)
+    {
+        [$taxonomy, $term] = $this->resolve($taxonomy, $slug);
+        $site = $this->siteFromHandle($site, $taxonomy);
+
+        $localized = $term->in($site->handle());
+
+        $request->headers->add(['accept' => 'application/json']);
+
+        $editData = (new CpController($request))->edit($request, $taxonomy, $localized);
+
+        $payload = [
+            'site' => $site->handle(),
+            'values' => data_get($editData, 'values', []),
+            'localizedFields' => data_get($editData, 'localizedFields', []),
+            'hasOrigin' => data_get($editData, 'hasOrigin', false),
+            'originValues' => data_get($editData, 'originValues'),
+        ];
+
+        if ($request->boolean('with_blueprint')) {
+            $payload['blueprint'] = data_get($editData, 'blueprint');
+        }
+
+        return response()->json(['data' => $payload]);
+    }
+
     private function resolve($taxonomyHandle, $slug): array
     {
         $taxonomy = Facades\Taxonomy::find($taxonomyHandle);

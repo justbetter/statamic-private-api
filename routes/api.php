@@ -73,6 +73,7 @@ Route::prefix(config('private-api.route'))
                                             ->group(function () {
                                                 Route::get('/', [Controllers\EntryLocalizationsController::class, 'index'])->name('index');
                                                 Route::get('{site}', [Controllers\EntryLocalizationsController::class, 'show'])->name('show');
+                                                Route::get('{site}/values', [Controllers\EntryLocalizationsController::class, 'values'])->name('values');
                                                 Route::patch('{site}', [Controllers\EntryLocalizationsController::class, 'update'])->name('update');
                                             });
                                     });
@@ -185,6 +186,7 @@ Route::prefix(config('private-api.route'))
                                             ->group(function () {
                                                 Route::get('/', [Controllers\TermLocalizationsController::class, 'index'])->name('index');
                                                 Route::get('{site}', [Controllers\TermLocalizationsController::class, 'show'])->name('show');
+                                                Route::get('{site}/values', [Controllers\TermLocalizationsController::class, 'values'])->name('values');
                                                 Route::patch('{site}', [Controllers\TermLocalizationsController::class, 'update'])->name('update');
                                             });
                                     });
