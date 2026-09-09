@@ -5,7 +5,6 @@ namespace Tv2regionerne\StatamicPrivateApi\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
 use Illuminate\Validation\ValidationException;
-use Statamic\Contracts\Entries\Entry as EntryContract;
 use Statamic\Facades;
 use Statamic\Http\Controllers\CP\Collections\EntriesController as CpController;
 use Statamic\Http\Resources\API\EntryResource;
@@ -83,7 +82,9 @@ class EntryLocalizationsController extends ApiController
         $created = false;
 
         if (! $localized = $root->in($site->handle())) {
-            $this->authorize('create', [EntryContract::class, $collection, $site]);
+            // Same check as the CP LocalizeEntryController; the subsequent
+            // CP update() call authorizes 'update' on the localization itself.
+            $this->authorize('edit', $root);
 
             // Mirror the CP LocalizeEntryController: makeLocalization()
             // expects the site handle (a string, not a Site object), and
