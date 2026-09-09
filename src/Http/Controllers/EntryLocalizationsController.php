@@ -80,11 +80,18 @@ class EntryLocalizationsController extends ApiController
         $root = $this->rootEntry($entry, $collection);
         $site = $this->siteFromHandle($site, $collection);
 
+        $created = false;
+
         if (! $localized = $root->in($site->handle())) {
             $this->authorize('create', [EntryContract::class, $collection, $site]);
 
-            $localized = $root->makeLocalization($site);
-            $localized->save();
+            // Mirror the CP LocalizeEntryController: makeLocalization()
+            // expects the site handle (a string, not a Site object), and
+            // store() rather than save() so slug and structure handling run.
+            $localized = $root->makeLocalization($site->handle());
+            $localized->store(['user' => Facades\User::fromUser($request->user())]);
+
+            $created = true;
         }
 
         $payloadKeys = collect($request->except(['id', '_localized']))->keys();
@@ -108,7 +115,18 @@ class EntryLocalizationsController extends ApiController
         try {
             $response = (new CpController($request))->update($request, $collection, $localized);
         } catch (ValidationException $e) {
+            if ($created) {
+                $localized->delete();
+            }
+
             return $this->returnValidationErrors($e);
+        } catch (\Throwable $e) {
+            // Never leave a half-created localization behind.
+            if ($created) {
+                $localized->delete();
+            }
+
+            throw $e;
         }
 
         if (! $id = Arr::get($response, 'data.id')) {
