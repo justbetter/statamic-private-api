@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Event;
 use Statamic\Facades;
+use Statamic\Support\Arr;
 
 it('gets entries', function () {
     $collection = tap(Facades\Collection::make('test'))->save();
@@ -64,7 +65,7 @@ it('gets individual entries', function () {
 
     $json = $response->json();
 
-    $this->assertSame($entry1->id(), \Statamic\Support\Arr::get($json, 'data.id'));
+    $this->assertSame($entry1->id(), Arr::get($json, 'data.id'));
 
     $this->get(route('private.collections.entries.show', ['collection' => $collection->handle(), 'entry' => 'none']))
         ->assertNotFound();
@@ -87,8 +88,41 @@ it('gets updates an entry', function () {
 
     $json = $response->json();
 
-    $this->assertSame('test', \Statamic\Support\Arr::get($json, 'data.title'));
+    $this->assertSame('test', Arr::get($json, 'data.title'));
     $this->assertSame('test', $entry1->fresh()->get('title'));
+});
+
+it('keeps spaces around bard marks but still trims plain strings', function () {
+    Facades\Blueprint::setDirectories(['default' => __DIR__.'/../../__fixtures__/blueprints']);
+
+    $collection = tap(Facades\Collection::make('test'))->save();
+
+    $entry1 = tap(Facades\Entry::make()->id('test1')->collection($collection))->save();
+
+    $this->actingAs(makeUser());
+
+    $this->patchJson(route('private.collections.entries.update', ['collection' => $collection->handle(), 'entry' => $entry1->id()]), [
+        'title' => 'Fase3 testbericht ',
+        'short_description' => [
+            [
+                'type' => 'paragraph',
+                'content' => [
+                    ['type' => 'text', 'text' => 'This is a '],
+                    ['type' => 'text', 'marks' => [['type' => 'bold']], 'text' => 'bold'],
+                    ['type' => 'text', 'text' => ' word in a sentence.'],
+                ],
+            ],
+        ],
+    ])->assertOk();
+
+    $fresh = $entry1->fresh();
+
+    $content = Arr::get($fresh->get('short_description'), '0.content');
+
+    $this->assertSame('This is a ', $content[0]['text']);
+    $this->assertSame(' word in a sentence.', $content[2]['text']);
+
+    $this->assertSame('Fase3 testbericht', $fresh->get('title'));
 });
 
 it('updates dated entries without failing date validation on partial updates', function () {
@@ -165,7 +199,7 @@ it('creates an entry', function () {
 
     $json = $response->json();
 
-    $this->assertSame('test', \Statamic\Support\Arr::get($json, 'data.title'));
+    $this->assertSame('test', Arr::get($json, 'data.title'));
     $this->assertSame('test', Facades\Entry::all()->first()->get('title'));
 });
 
