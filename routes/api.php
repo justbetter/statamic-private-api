@@ -1,17 +1,20 @@
 <?php
 
+use Illuminate\Http\Request;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Route;
+use Statamic\Http\Middleware\CP\TrimStrings;
 use Tv2regionerne\StatamicPrivateApi\Facades\PrivateApi;
 use Tv2regionerne\StatamicPrivateApi\Http\Controllers;
 
 Route::prefix(config('private-api.route'))
-    ->middleware(config('private-api.middleware'))
+    ->middleware([...Arr::wrap(config('private-api.middleware')), TrimStrings::class])
     ->group(function () {
 
         Route::name('private.')
             ->group(function () {
 
-                Route::get('/ping', function (Illuminate\Http\Request $request) {
+                Route::get('/ping', function (Request $request) {
                     return $request->user();
                 });
 

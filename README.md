@@ -4,7 +4,7 @@
 [![Packagist](https://img.shields.io/packagist/v/tv2regionerne/statamic-passport.svg?style=flat-square)](https://packagist.org/packages/tv2regionerne/statamic-passport)
 [![Downloads](https://img.shields.io/packagist/dt/tv2regionerne/statamic-passport.svg?style=flat-square)](https://packagist.org/packages/tv2regionerne/statamic-passport)
 [![License](https://img.shields.io/github/license/tv2regionerne/statamic-passport.svg?style=flat-square)](LICENSE)
-[![Supported Statamic version](https://img.shields.io/badge/Statamic-4.0%2B-FF269E)](https://github.com/statamic/cms/releases)
+[![Supported Statamic version](https://img.shields.io/badge/Statamic-5.0%2B-FF269E)](https://github.com/statamic/cms/releases)
 <!-- /statamic:hide -->
 
 > Statamic Private Api is a Statamic addon that enables a private REST API.  

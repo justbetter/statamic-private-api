@@ -1,0 +1,10 @@
+title: Test
+fields:
+  -
+    handle: title
+    field:
+      type: text
+  -
+    handle: short_description
+    field:
+      type: bard
